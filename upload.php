@@ -36,10 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Define the style block
             $style_block = "<style>
-                .client-shared-table-Table__td--HJGGb, 
-                .client-shared-table-Table__th--fE55m, 
-                .client-shared-table-Table__isSorted--Q568B {
-                    width: 800px !important;
+                .client-shared-table-Table__td--HJGGb:first-child,
+                .client-shared-table-Table__th--fE55m:first-child {
+                    width: 600px !important;
+                    max-width: 600px;
+                    word-wrap: break-word; 
                 }
             </style>";
 
