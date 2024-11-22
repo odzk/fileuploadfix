@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $style_block = "<style>
                 .client-shared-table-Table__td--HJGGb:first-child,
                 .client-shared-table-Table__th--fE55m:first-child {
-                    width: 600px !important;
-                    max-width: 600px;
+                    width: 800px !important;
+                    max-width: 800px;
                     word-wrap: break-word; 
                 }
             </style>";
