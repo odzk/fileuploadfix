@@ -4,14 +4,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Upload</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 40px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        h3 {
+            text-align: center;;
+        }
+        
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-input-container {
+            position: relative;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-input-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .file-input {
+            padding: 15px;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-input:hover {
+            border-color: #3498db;
+            background-color: #f0f7fd;
+        }
+        
+        .file-name {
+            font-size: 14px;
+            margin-top: 8px;
+            margin-left: 5px;
+            color: #666;
+        }
+        
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+            align-self: center;
+            min-width: 150px;
+        }
+        
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .info-text {
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 20px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin-top: 20px;
+            }
+            
+            .submit-btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Upload a File</h2>
-    <form action="upload.php" method="post" enctype="multipart/form-data">
-        <label for="file">Choose file:</label>
-        <input type="file" name="file" id="file">
-        <br><br>
-        <input type="submit" value="Upload File">
-    </form>
+    <div class="container">
+        <h2>Nuvho Marketing</h2>
+        <h3>Upload a File</h3>
+        <form class="upload-form" action="upload.php" method="post" enctype="multipart/form-data">
+            <div class="file-input-container">
+                <label class="file-input-label" for="file">Choose a file to upload:</label>
+                <input class="file-input" type="file" name="file" id="file" onchange="updateFileName()">
+                <span class="file-name" id="fileName">No file selected</span>
+            </div>
+            <input class="submit-btn" type="submit" value="Upload File">
+        </form>
+        <p class="info-text">Allowed file types: JPEG, PNG, PDF, and HTML (Max size: 5MB)</p>
+    </div>
+
+    <script>
+        function updateFileName() {
+            const fileInput = document.getElementById('file');
+            const fileNameSpan = document.getElementById('fileName');
+            
+            if (fileInput.files.length > 0) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+            } else {
+                fileNameSpan.textContent = 'No file selected';
+            }
+        }
+    </script>
 </body>
 </html>
