@@ -2,7 +2,7 @@
 // Set header to ensure proper content type and encoding
 header('Content-Type: text/html; charset=utf-8');
 
-// Start building the HTML structure
+// Start building the HTML structure for the response page
 $head = '<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,11 +85,84 @@ $head = '<!DOCTYPE html>
             text-decoration: underline;
         }
         
+        .url-container {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            position: relative;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 2px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .url-field {
+            flex-grow: 1;
+            border: none;
+            background: transparent;
+            padding: 10px;
+            font-family: monospace;
+            color: #555;
+            width: calc(100% - 45px);
+            outline: none;
+        }
+        
+        .copy-button {
+            background-color: #e0e0e0;
+            border: none;
+            color: #555;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 0 4px 4px 0;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .copy-button:hover {
+            background-color: #d0d0d0;
+        }
+        
+        .tooltip {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
                 margin-top: 20px;
+            }
+            
+            .url-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .url-field {
+                width: calc(100% - 20px);
+                margin-bottom: 5px;
+                border-radius: 4px;
+            }
+            
+            .copy-button {
+                border-radius: 4px;
+                width: 100%;
             }
         }
     </style>
@@ -99,6 +172,26 @@ $head = '<!DOCTYPE html>
 
 $foot = '        <a href="index.html" class="back-link">← Back to Upload Form</a>
     </div>
+    
+    <script>
+        function copyToClipboard(elementId) {
+            const urlField = document.getElementById(elementId);
+            urlField.select();
+            urlField.setSelectionRange(0, 99999); // For mobile devices
+            
+            // Copy the text
+            document.execCommand("copy");
+            
+            // Show the tooltip
+            const tooltip = document.getElementById("copyTooltip");
+            tooltip.classList.add("show");
+            
+            // Hide the tooltip after 2 seconds
+            setTimeout(function() {
+                tooltip.classList.remove("show");
+            }, 2000);
+        }
+    </script>
 </body>
 </html>';
 
@@ -140,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Check if directory exists, if not, create it
     if (!file_exists($target_dir)) {
-        mkdir($target_dir, 0755, true);
+        mkdir($target_dir, 0777, true); // Using 0777 for permissive permissions
     }
 
     // Attempt to move the uploaded file
@@ -149,29 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($file_type === 'text/html') {
             $html_content = file_get_contents($target_file);
 
-            // Define the style block with relative sizing
+            // Define the style block - using the original simple approach
             $style_block = "<style>
-                .client-shared-table-Table__tr--f-a8J {
-                    width: 2000px !important;
-                }
                 .client-shared-table-Table__td--HJGGb:first-child,
                 .client-shared-table-Table__th--fE55m:first-child {
-                    width: 700px !important;
-                    max-width: 700px !important;
+                    width: 800px !important;
+                    max-width: 800px;
                     word-wrap: break-word; 
-                }
-                
-                /* Make table responsive */
-                table {
-                    width: 700px !important;
-                    max-width: 700px !important;
-                    table-layout: fixed !important;
-                }
-                
-                /* Ensure all cells can wrap text as needed */
-                td, th {
-                    word-wrap: break-word !important;
-                    overflow-wrap: break-word !important;
                 }
             </style>";
 
@@ -182,6 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             file_put_contents($target_file, $html_content);
         }
 
+        // Create full URL to the file
         $file_url = "https://" . $_SERVER['HTTP_HOST'] . "/" . $target_file;
         
         // Get file type name for display
@@ -208,6 +286,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <p><strong>Type:</strong> ' . $file_type_name . '</p>
             <p><strong>Size:</strong> ' . $file_size_kb . ' KB</p>
         </div>
+        
+        <p><strong>File URL:</strong></p>
+        <div class="url-container">
+            <input type="text" class="url-field" id="fileUrl" value="' . $file_url . '" readonly>
+            <button class="copy-button" onclick="copyToClipboard(\'fileUrl\')">Copy</button>
+            <span class="tooltip" id="copyTooltip">Copied!</span>
+        </div>
+        
         <a href="' . $file_url . '" class="file-link" target="_blank">View File</a>';
     } else {
         $output = '<h2>Upload Failed</h2>
