@@ -2,6 +2,52 @@
 // Set header to ensure proper content type and encoding
 header('Content-Type: text/html; charset=utf-8');
 
+// Function to calculate text width (approximate)
+function calculateTextWidth($text, $fontSize = 14, $fontFamily = 'Segoe UI') {
+    // Average character width multipliers for common fonts
+    $charWidthMultiplier = 0.6; // Approximate ratio for Segoe UI
+    
+    // Base calculation: character count * font size * multiplier
+    $baseWidth = strlen($text) * $fontSize * $charWidthMultiplier;
+    
+    // Add extra allowance (30% more + minimum 100px padding)
+    $allowance = max($baseWidth * 0.3, 100);
+    
+    return ceil($baseWidth + $allowance);
+}
+
+// Function to extract text from first table cell
+function extractFirstCellText($htmlContent) {
+    // Create a DOMDocument to parse HTML
+    $dom = new DOMDocument();
+    
+    // Suppress warnings for malformed HTML
+    libxml_use_internal_errors(true);
+    
+    // Load HTML content
+    $dom->loadHTML($htmlContent, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    
+    // Find the first element with the specific class
+    $xpath = new DOMXPath($dom);
+    $cells = $xpath->query("//div[contains(@class, 'client-shared-table-Table__td--HJGGb')]");
+    
+    if ($cells->length > 0) {
+        $firstCell = $cells->item(0);
+        
+        // Get text content from spans within the cell
+        $spans = $xpath->query(".//span", $firstCell);
+        if ($spans->length > 0) {
+            return trim($spans->item(0)->textContent);
+        }
+        
+        // Fallback to cell text content
+        return trim($firstCell->textContent);
+    }
+    
+    // If no cell found, return default text for width calculation
+    return "Default table cell content";
+}
+
 // Start building the HTML structure for the response page
 $head = '<!DOCTYPE html>
 <html lang="en">
@@ -242,13 +288,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($file_type === 'text/html') {
             $html_content = file_get_contents($target_file);
 
-            // Define the style block - using the original simple approach
+            // Extract text from first cell to calculate dynamic width
+            $firstCellText = extractFirstCellText($html_content);
+            $calculatedWidth = calculateTextWidth($firstCellText);
+            
+            // Ensure minimum width of 200px and maximum of 1200px for practical limits
+            $dynamicWidth = max(200, min(1200, $calculatedWidth));
+
+            // Calculate total table width (8 columns * 200px base + extra width for first column)
+            $totalTableWidth = (8 * 200) + ($dynamicWidth - 200); // 1600 base + difference for first column
+            $totalTableWidth = max(2000, $totalTableWidth); // Ensure minimum 2000px
+            
+            // Define the style block with dynamic width
             $style_block = "<style>
                 .client-shared-table-Table__td--HJGGb:first-child,
                 .client-shared-table-Table__th--fE55m:first-child {
-                    width: 800px !important;
-                    max-width: 800px;
+                    width: {$dynamicWidth}px !important;
+                    max-width: {$dynamicWidth}px;
                     word-wrap: break-word; 
+                }
+                .client-shared-table-Table__tr--f-a8J {
+                    width: {$totalTableWidth}px !important;
                 }
             </style>";
 
@@ -284,8 +344,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="file-info">
             <p><strong>Filename:</strong> ' . htmlspecialchars($filename) . '</p>
             <p><strong>Type:</strong> ' . $file_type_name . '</p>
-            <p><strong>Size:</strong> ' . $file_size_kb . ' KB</p>
-        </div>
+            <p><strong>Size:</strong> ' . $file_size_kb . ' KB</p>';
+        
+        // Add width calculation info for HTML files
+        if ($file_type === 'text/html' && isset($firstCellText) && isset($dynamicWidth)) {
+            $output .= '<p><strong>Dynamic Width Applied:</strong> ' . $dynamicWidth . 'px (based on text: "' . htmlspecialchars(substr($firstCellText, 0, 50)) . (strlen($firstCellText) > 50 ? '...' : '') . '")</p>';
+        }
+        
+        $output .= '</div>
         
         <p><strong>File URL:</strong></p>
         <div class="url-container">
